@@ -4,6 +4,8 @@ export interface Repo {
     description: string | null;
     html_url: string;
     stargazers_count: number;
+    forks_count: number;
+    language: string | null;
     updated_at: string;
 }
 
@@ -12,9 +14,6 @@ export interface ReposState {
     isLoading: boolean;
     error: string | null;
     page: number;
+    hasMore: boolean;
     user: string;
-}
-
-export interface SearchBarProps {
-    onSearch: (username: string) => void;
 }

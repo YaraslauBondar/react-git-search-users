@@ -1,50 +1,54 @@
-# React + TypeScript + Vite
+# GitHub Repo Search
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Поиск публичных репозиториев GitHub по имени пользователя: ввод с задержкой, бесконечная прокрутка, обработка ошибок.
 
-Currently, two official plugins are available:
+**[Демо](https://yaraslaubondar.github.io/react-git-search-users/)** · React 19 · TypeScript · Redux Toolkit · Tailwind CSS 4 · Vite
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+<!-- Добавьте сюда скриншот: ![Скриншот](docs/screenshot.png) -->
 
-## Expanding the ESLint configuration
+## Возможности
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- Поиск по имени пользователя с debounce (500 мс), без лишних запросов при наборе
+- Бесконечная прокрутка с подгрузкой по 20 репозиториев
+- Корректная обработка состояний: загрузка, пустой результат, «пользователь не найден», превышен лимит GitHub API, нет сети
+- Защита от «гонки» запросов: устаревший ответ не перезапишет результат нового поиска
+- Карточка репозитория: описание, звёзды, форки, язык, дата обновления
+- Адаптивная вёрстка, доступные подписи (`aria-label`, `role="alert"`)
 
-- Configure the top-level `parserOptions` property like this:
+## Стек и архитектура
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+| Что | Чем |
+| --- | --- |
+| UI | React 19 + TypeScript |
+| Состояние и запросы | Redux Toolkit (`createSlice`, `createAsyncThunk`), axios |
+| Стили | Tailwind CSS 4 |
+| Сборка | Vite 6 |
+| Качество | ESLint (typescript-eslint, react-hooks) |
+| Деплой | GitHub Actions → GitHub Pages, Docker + nginx |
+
+```
+src/
+  components/   SearchBar, RepoList, RepoCard, Loader
+  redux/        store, срез repos и асинхронный thunk
+  interface/    типы данных
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+## Запуск
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+```bash
+npm ci
+npm run dev        # http://localhost:5173
+npm run build      # production-сборка в dist/
+npm run lint
 ```
+
+Через Docker:
+
+```bash
+docker build -t git-search .
+docker run -p 8080:80 git-search   # http://localhost:8080
+```
+
+## Примечание
+
+GitHub API без авторизации ограничен 60 запросами в час с одного IP. При превышении приложение покажет понятное сообщение.

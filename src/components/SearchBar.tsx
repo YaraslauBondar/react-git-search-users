@@ -1,38 +1,37 @@
-import { useCallback, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import debounce from "lodash.debounce";
 import { fetchRepos, setUser } from "../redux/repo.ts";
 import { useAppDispatch } from "../hooks.ts";
-import debounce from "lodash.debounce";
-import { SearchBarProps } from "../interface/repo.interface.ts";
 
-
-const SearchBar = ({ onSearch }: SearchBarProps) => {
+const SearchBar = () => {
     const [value, setValue] = useState("");
-
     const dispatch = useAppDispatch();
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setValue(e.target.value);
-        onSearch(e.target.value);
-        debouncedSearch(e.target.value);
-    };
-
-    const debouncedSearch = useCallback(
-        debounce((value: string) => {
-            if (value) {
-                dispatch(setUser(value));
-                dispatch(fetchRepos({ user: value, page: 1 }));
-            }
-        }, 500),
+    const debouncedSearch = useMemo(
+        () =>
+            debounce((query: string) => {
+                dispatch(setUser(query));
+                if (query) dispatch(fetchRepos({ user: query, page: 1 }));
+            }, 500),
         [dispatch]
     );
 
+    useEffect(() => () => debouncedSearch.cancel(), [debouncedSearch]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setValue(e.target.value);
+        debouncedSearch(e.target.value.trim());
+    };
+
     return (
         <input
-            type="text"
+            type="search"
             value={value}
             onChange={handleChange}
+            aria-label="Имя пользователя GitHub"
             className="w-full p-2 border rounded"
             placeholder="Введите имя пользователя GitHub"
+            autoFocus
         />
     );
 };
